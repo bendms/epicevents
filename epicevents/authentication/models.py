@@ -25,18 +25,18 @@ class MyUserManager(BaseUserManager):
         return user
 
 class MyUser(AbstractBaseUser, PermissionsMixin):
-
+   
     TYPE_CHOICES = [
         ("MANAGEMENT", "Gestion"),
         ("SALES", "Vente"),
         ("SUPPORT", "Support"),
     ]
     
-    firstname = models.CharField(max_length=25)
-    lastname = models.CharField(max_length=25)
+    firstname = models.CharField(max_length=25, blank=True)
+    lastname = models.CharField(max_length=25, blank=True)
     email = models.EmailField(max_length=100, unique=True)
-    phone = models.CharField(max_length=20)
-    mobile = models.CharField(max_length=20)
+    phone = models.CharField(max_length=20, blank=True)
+    mobile = models.CharField(max_length=20, blank=True)
     role = models.CharField(max_length=20, choices=TYPE_CHOICES)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)

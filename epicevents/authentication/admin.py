@@ -16,7 +16,7 @@ class UserCreationForm(forms.ModelForm):
 
     class Meta:
         model = MyUser
-        fields = ('email', 'password', 'role')
+        fields = ("firstname", "lastname", "email", "phone", "mobile", "role")
 
     def clean_password2(self):
         # Check that the two password entries match
@@ -44,7 +44,7 @@ class UserChangeForm(forms.ModelForm):
 
     class Meta:
         model = MyUser
-        fields = ('email', 'password', 'is_active', 'is_admin')
+        fields = ("firstname", "lastname", "email", "phone", "mobile", "role")
 
 
 class UserAdmin(BaseUserAdmin):
@@ -55,10 +55,10 @@ class UserAdmin(BaseUserAdmin):
     # The fields to be used in displaying the User model.
     # These override the definitions on the base UserAdmin
     # that reference specific fields on auth.User.
-    list_display = ('email', 'role', 'is_admin')
-    list_filter = ('is_admin',)
+    list_display = ('email', 'firstname', 'lastname', 'role', 'is_admin')
+    list_filter = ('is_admin', 'role',)
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('email', 'password', "firstname", "lastname", "phone", "mobile")}),
         ('Personal info', {'fields': ('role',)}),
         ('Permissions', {'fields': ('is_admin',)}),
     )
@@ -67,7 +67,7 @@ class UserAdmin(BaseUserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'role', 'password1', 'password2'),
+            'fields': ('email', 'role', 'password1', 'password2', 'firstname', 'lastname', 'phone', 'mobile'),
         }),
     )
     search_fields = ('email',)
@@ -79,4 +79,4 @@ class UserAdmin(BaseUserAdmin):
 admin.site.register(MyUser, UserAdmin)
 # ... and, since we're not using Django's built-in permissions,
 # unregister the Group model from admin.
-admin.site.unregister(Group)
+# admin.site.unregister(Group)
