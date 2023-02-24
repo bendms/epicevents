@@ -1,6 +1,7 @@
 from django.db import models
 from epicevents.settings import AUTH_USER_MODEL as MyUser
 
+
 class Customer(models.Model):
     
     firstname = models.CharField(max_length=25, blank=True)
@@ -28,29 +29,33 @@ class Contract(models.Model):
     payment_due = models.DateTimeField()
     
     def __str__(self):
-        return "Contrat : " + self.customer + " Montant : " + self.amount
+        return "Contrat " + str(self.customer) + " - " + str(self.amount) + "€ géré par " + str(self.sales_contact)
 
-class EventStatus(models.Model):
+class Event(models.Model):
     
     EVENT_STATUS_CHOICES = [
         ("PLANNED", "Planifié"),
         ("ACCOMPLISHED", "Réalisé"),
     ]    
-    
-    status = models.CharField(max_length=50, choices=EVENT_STATUS_CHOICES)
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
-    
-class Event(models.Model):
+        
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     support_contact = models.ForeignKey(MyUser, on_delete=models.DO_NOTHING)
-    event_status = models.ForeignKey(EventStatus, on_delete=models.CASCADE)
+    event_status = models.CharField(max_length=50, choices=EVENT_STATUS_CHOICES)
     attendees = models.IntegerField()
     event_date = models.DateTimeField()
     notes = models.CharField(max_length=500)
-
+    
     def __str__(self):
-        return "Évènement pour " + self.customer + " en date du " + self.event_date
+        return str(self.customer) + str(self.event_date)
 
+# class EventStatus(models.Model):
+    
+#     EVENT_STATUS_CHOICES = [
+#         ("PLANNED", "Planifié"),
+#         ("ACCOMPLISHED", "Réalisé"),
+#     ]
+#     event_status = models.CharField(max_length=50, choices=EVENT_STATUS_CHOICES)
+#     date_created = models.DateTimeField(auto_now_add=True)
+#     date_updated = models.DateTimeField(auto_now=True)    
