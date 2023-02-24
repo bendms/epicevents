@@ -15,11 +15,25 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = "__all__"
         
 class CustomerSerializer(serializers.ModelSerializer):
+    
+    contracts = serializers.SerializerMethodField()
+    events = serializers.SerializerMethodField()
+    
     class Meta:
         model = Customer
         fields = "__all__"
         
-class ContractSerializer(serializers.ModelSerializer):
+    def get_contracts(self, instance):
+        queryset = Contract.objects.filter(customer=instance)
+        serializer = ContractSerializer(queryset, many=True)
+        return serializer.data
+        
+    def get_events(self, instance):
+        queryset = Event.objects.filter(customer=instance)
+        serializer = EventSerializer(queryset, many=True)
+        return serializer.data
+    
+class ContractSerializer(serializers.ModelSerializer):  
     class Meta:
         model = Contract
         fields = "__all__"
