@@ -5,6 +5,10 @@ from authentication.models import MyUser
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from .serializers import UserSerializer, GroupSerializer, CustomerSerializer, ContractSerializer, EventSerializer
+from rest_framework import filters
+import django_filters.rest_framework
+
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -20,11 +24,13 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     
 class CustomerViewSet(viewsets.ModelViewSet):
-    serializer_class = CustomerSerializer
     queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    filterset_fields = ['company_name', 'email']
+    search_fields = ['company_name', 'email']
     
     def list(self, request):
-        queryset = Customer.objects.filter()
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = CustomerSerializer(queryset, many=True)
         return Response(serializer.data)
     
@@ -35,11 +41,13 @@ class CustomerViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
 class ContractViewSet(viewsets.ModelViewSet):
-    serializer_class = ContractSerializer
     queryset = Contract.objects.all()
-    
+    serializer_class = ContractSerializer
+    filterset_fields = ['customer__company_name', 'customer__email', 'date_created', 'amount']
+    search_fields = ['customer__company_name', 'customer__email', 'date_created', 'amount']
+        
     def list(self, reqiest):
-        queryset = Contract.objects.filter()
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = ContractSerializer(queryset, many=True)
         return Response(serializer.data)
     
@@ -52,9 +60,11 @@ class ContractViewSet(viewsets.ModelViewSet):
 class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
     queryset = Event.objects.all()
+    filterset_fields = ['customer__company_name', 'customer__email', 'event_date']
+    search_fields = ['customer__company_name', 'customer__email', 'event_date']
     
     def list(self, request):
-        queryset = Event.objects.filter()
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = EventSerializer(queryset, many=True)
         return Response(serializer.data)
     
