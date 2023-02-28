@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
 
 from .serializers import UserSerializer, GroupSerializer, CustomerSerializer, ContractSerializer, EventSerializer
-from .permissions import IsAuthenticated, IsSalesUser
+from .permissions import IsAuthenticated, IsSalesUser, IsManager, IsAssignedToCustomer
 
 
 
@@ -38,13 +38,17 @@ class CustomerViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             permission_classes = [IsAuthenticated]
             return [permission() for permission in permission_classes]
+        elif self.action == 'retrieve':
+            permission_classes = [IsAssignedToCustomer]
+            return [permission() for permission in permission_classes]
         elif self.action == 'create':
-            permission_classes = [IsAuthenticated & IsSalesUser]
+            permission_classes = [IsSalesUser]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'destroy':
+            permission_classes = [IsManager]
             return [permission() for permission in permission_classes]
         return super().get_permissions()
-        # elif self.action == 'create':
-        #     permission_classes = [IsAuthenticated | IsSalesUser]
-        #     return [permission() for permission in permission_classes]           
+      
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
         serializer_class = CustomerSerializer(queryset, many=True)
@@ -52,10 +56,11 @@ class CustomerViewSet(viewsets.ModelViewSet):
         return Response(serializer_class.data, status=status.HTTP_200_OK, headers=headers)
     
     def retrieve(self, request, pk=None):
-        queryset = Customer.objects.filter()
+        queryset = self.filter_queryset(self.get_queryset())
         customer = get_object_or_404(queryset, pk=pk)
         serializer = CustomerSerializer(customer)
         return Response(serializer.data)
+    
     
 class ContractViewSet(viewsets.ModelViewSet):
     queryset = Contract.objects.all()
