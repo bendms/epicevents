@@ -2,12 +2,12 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import Group
 from .models import Customer, Contract, Event
 from authentication.models import MyUser
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from .serializers import UserSerializer, GroupSerializer, CustomerSerializer, ContractSerializer, EventSerializer
-from rest_framework import filters
-import django_filters.rest_framework
+from rest_framework.decorators import permission_classes
 
+from .serializers import UserSerializer, GroupSerializer, CustomerSerializer, ContractSerializer, EventSerializer
+from .permissions import IsAuthenticated, IsSalesUser
 
 
 
@@ -29,10 +29,27 @@ class CustomerViewSet(viewsets.ModelViewSet):
     filterset_fields = ['company_name', 'email']
     search_fields = ['company_name', 'email']
     
+    def get_queryset(self):
+        user = self.request.user
+        print('SELF.ACTION_IN_GET_QUERYSET_METHOD', self.action)
+        return Customer.objects.filter(sales_contact=user.id)
+       
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'create':
+            permission_classes = [IsAuthenticated & IsSalesUser]
+            return [permission() for permission in permission_classes]
+        return super().get_permissions()
+        # elif self.action == 'create':
+        #     permission_classes = [IsAuthenticated | IsSalesUser]
+        #     return [permission() for permission in permission_classes]           
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = CustomerSerializer(queryset, many=True)
-        return Response(serializer.data)
+        serializer_class = CustomerSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer_class.data)
+        return Response(serializer_class.data, status=status.HTTP_200_OK, headers=headers)
     
     def retrieve(self, request, pk=None):
         queryset = Customer.objects.filter()
