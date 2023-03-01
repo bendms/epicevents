@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
 
 from .serializers import UserSerializer, GroupSerializer, CustomerSerializer, ContractSerializer, EventSerializer
-from .permissions import IsAuthenticated, IsSalesUser, IsManager, IsAssignedToCustomer
+from .permissions import IsAuthenticated, IsSalesUser, IsManager, IsAssignedToCustomer, IsAssignedToEvent
 
 
 
@@ -29,10 +29,12 @@ class CustomerViewSet(viewsets.ModelViewSet):
     filterset_fields = ['company_name', 'email']
     search_fields = ['company_name', 'email']
     
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     print('SELF.ACTION_IN_GET_QUERYSET_METHOD', self.action)
+    #     return Customer.objects.filter(sales_contact=user.id)
     def get_queryset(self):
-        user = self.request.user
-        print('SELF.ACTION_IN_GET_QUERYSET_METHOD', self.action)
-        return Customer.objects.filter(sales_contact=user.id)
+        return Customer.objects.all()
        
     def get_permissions(self):
         if self.action == 'list':
@@ -40,6 +42,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return [permission() for permission in permission_classes]
         elif self.action == 'retrieve':
             permission_classes = [IsAssignedToCustomer]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'update' or self.action == 'partial_update':
+            permission_classes = [IsAssignedToCustomer & IsSalesUser]
             return [permission() for permission in permission_classes]
         elif self.action == 'create':
             permission_classes = [IsSalesUser]
@@ -68,10 +73,33 @@ class ContractViewSet(viewsets.ModelViewSet):
     filterset_fields = ['customer__company_name', 'customer__email', 'date_created', 'amount']
     search_fields = ['customer__company_name', 'customer__email', 'date_created', 'amount']
         
-    def list(self, reqiest):
+    def get_queryset(self):
+        return Contract.objects.all()
+    
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'retrieve':
+            permission_classes = [IsAssignedToCustomer]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'update' or self.action == 'partial_update':
+            permission_classes = [IsAssignedToCustomer & IsSalesUser]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'create':
+            permission_classes = [IsSalesUser]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'destroy':
+            permission_classes = [IsManager]
+            return [permission() for permission in permission_classes]
+        return super().get_permissions()
+        
+    def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = ContractSerializer(queryset, many=True)
-        return Response(serializer.data)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+        
     
     def retrieve(self, request, pk=None):
         queryset = Contract.objects.filter()
@@ -85,13 +113,37 @@ class EventViewSet(viewsets.ModelViewSet):
     filterset_fields = ['customer__company_name', 'customer__email', 'event_date']
     search_fields = ['customer__company_name', 'customer__email', 'event_date']
     
+    def get_queryset(self):
+        return Event.objects.all()
+    
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'retrieve':
+            permission_classes = [IsAssignedToCustomer | IsAssignedToEvent]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'update' or self.action == 'partial_update':
+            permission_classes = [IsAssignedToCustomer | IsAssignedToEvent]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'create':
+            permission_classes = [IsSalesUser]
+            return [permission() for permission in permission_classes]
+        elif self.action == 'destroy':
+            permission_classes = [IsManager]
+            return [permission() for permission in permission_classes]
+        return super().get_permissions()
+        
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = EventSerializer(queryset, many=True)
         return Response(serializer.data)
     
     def retrieve(self, request, pk=None):
-        queryset = Event.objects.filter()
+        queryset = self.filter_queryset(self.get_queryset())
+        print("queryset", queryset)
         event = get_object_or_404(queryset, pk=pk)
+        print("event", event)
         serializer = EventSerializer(event)
+        print("serializer", serializer)
         return Response(serializer.data)

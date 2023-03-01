@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 from authentication.models import MyUser
-from .models import Customer
+from .models import Customer, Contract, Event
 
 class IsAuthenticated(BasePermission):
     def has_permission(self, request, view):
@@ -32,7 +32,23 @@ class IsAssignedToCustomer(BasePermission):
     print("You are here : IsAssignedToCustomer")
     
     def has_permission(self, request, view):
-        print(view.kwargs['pk'])
-        customer = Customer.objects.get(pk=view.kwargs['pk'])
-        if request.user == customer.sales_contact:
+        try:
+            customer = Customer.objects.get(pk=view.kwargs['pk'])
+            print("customer", customer)
+            contract = Contract.objects.get(pk=view.kwargs['pk'])
+            print("contract", contract)
+            if request.user == customer.sales_contact or request.user == contract.customer.sales_contact:
+                return True
+        except:
+            return False
+
+class IsAssignedToEvent(BasePermission):
+    print("You are here : IsAssignedToEvent")
+    
+    def has_permission(self, request, view):
+        event = Event.objects.get(pk=view.kwargs['pk'])
+        print("event", event)
+        if request.user == event.support_contact:
             return True
+    
+        
