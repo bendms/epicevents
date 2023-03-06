@@ -32,15 +32,45 @@ class IsAssignedToCustomer(BasePermission):
     print("You are here : IsAssignedToCustomer")
     
     def has_permission(self, request, view):
-        try:
+        if view.basename == "customers":
             customer = Customer.objects.get(pk=view.kwargs['pk'])
-            print("customer", customer)
-            contract = Contract.objects.get(pk=view.kwargs['pk'])
-            print("contract", contract)
-            if request.user == customer.sales_contact or request.user == contract.customer.sales_contact:
+            print("view.kwargs['pk']", view.kwargs['pk']) 
+            if customer.sales_contact == request.user:
+                return True               
+        elif view.basename == "contract":
+            if view.action == 'list':
                 return True
-        except:
-            return False
+            elif view.action == 'retrieve':
+                print("YOU ARE IN THE VIEW.ACTION == RETRIEVE CONDITION")
+                print(view.action)
+                contract = Contract.objects.get(id=view.kwargs['pk'])
+                if request.user == contract.sales_contact:
+                    return True
+                return False
+            elif request.method == "POST" or "PUT":
+                if not request.data:
+                    return True
+                else:
+                    customer = Customer.objects.get(id=request.data['customer'])
+                    if request.user == customer.sales_contact:
+                        return True
+        elif view.basename == "event":
+            if view.action == 'list':
+                return True
+            elif view.action == 'retrieve':
+                print("YOU ARE IN THE VIEW.ACTION == RETRIEVE CONDITION")
+                print(view.action)
+                event = Event.objects.get(id=view.kwargs['pk'])
+                if request.user == event.customer.sales_contact:
+                    return True
+                return False
+            elif request.method == "POST" or "PUT":
+                if not request.data:
+                    return True
+                else:
+                    customer = Customer.objects.get(id=request.data['customer'])
+                    if request.user == customer.sales_contact:
+                        return True
 
 class IsAssignedToEvent(BasePermission):
     print("You are here : IsAssignedToEvent")
@@ -51,4 +81,3 @@ class IsAssignedToEvent(BasePermission):
         if request.user == event.support_contact:
             return True
     
-        

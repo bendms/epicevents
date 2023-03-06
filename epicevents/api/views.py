@@ -28,11 +28,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
     serializer_class = CustomerSerializer
     filterset_fields = ['company_name', 'email']
     search_fields = ['company_name', 'email']
-    
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     print('SELF.ACTION_IN_GET_QUERYSET_METHOD', self.action)
-    #     return Customer.objects.filter(sales_contact=user.id)
+
     def get_queryset(self):
         return Customer.objects.all()
        
@@ -87,7 +83,7 @@ class ContractViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAssignedToCustomer & IsSalesUser]
             return [permission() for permission in permission_classes]
         elif self.action == 'create':
-            permission_classes = [IsSalesUser]
+            permission_classes = [IsAssignedToCustomer & IsSalesUser]
             return [permission() for permission in permission_classes]
         elif self.action == 'destroy':
             permission_classes = [IsManager]
@@ -127,7 +123,7 @@ class EventViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAssignedToCustomer | IsAssignedToEvent]
             return [permission() for permission in permission_classes]
         elif self.action == 'create':
-            permission_classes = [IsSalesUser]
+            permission_classes = [IsAssignedToCustomer]
             return [permission() for permission in permission_classes]
         elif self.action == 'destroy':
             permission_classes = [IsManager]
