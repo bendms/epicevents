@@ -37,7 +37,7 @@ class IsAssignedToCustomer(BasePermission):
             print("view.kwargs['pk']", view.kwargs['pk']) 
             if customer.sales_contact == request.user:
                 return True               
-        elif view.basename == "contract":
+        elif view.basename == "contract":            
             if view.action == 'list':
                 return True
             elif view.action == 'retrieve':
@@ -48,6 +48,7 @@ class IsAssignedToCustomer(BasePermission):
                     return True
                 return False
             elif request.method == "POST" or "PUT":
+                print("======REQUEST.DATA=====", request.data)                
                 if not request.data:
                     return True
                 else:
@@ -76,7 +77,21 @@ class IsAssignedToEvent(BasePermission):
     print("You are here : IsAssignedToEvent")
     
     def has_permission(self, request, view):
-        event = Event.objects.get(pk=view.kwargs['pk'])
+        if view.basename == "customers":
+            customer = Customer.objects.get(pk=view.kwargs['pk'])
+            print("CUSTOMER", customer)
+            try:
+                events_of_this_customer = Event.objects.filter(customer=customer.id)
+                print("EVENT_OF_THIS_CUSTOMER", events_of_this_customer)
+                for event in events_of_this_customer:
+                    print("EVENT", event)
+                    print("EVENT.SUPPORT_CONTACT", event.support_contact)
+                    if event.support_contact == request.user:
+                        return True
+            except:
+                return False
+        elif view.basename == "event":
+            event = Event.objects.get(pk=view.kwargs['pk'])
         print("event", event)
         if request.user == event.support_contact:
             return True

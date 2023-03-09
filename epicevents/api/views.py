@@ -37,7 +37,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated]
             return [permission() for permission in permission_classes]
         elif self.action == 'retrieve':
-            permission_classes = [IsAssignedToCustomer]
+            permission_classes = [IsAssignedToCustomer | IsAssignedToEvent]
             return [permission() for permission in permission_classes]
         elif self.action == 'update' or self.action == 'partial_update':
             permission_classes = [IsAssignedToCustomer & IsSalesUser]
